@@ -1,13 +1,13 @@
-package pl.tmatloch.permutationworker.rabbitmq;
+package pl.tmatloch.permutationworker.permutation;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class Permutation {
+public class PermutationRecursive implements Permutation {
 
     private final List<String> permutationResult = new ArrayList<>();
 
-    void permute(String string, int startIndex, int endIndex){
+    private void permute(String string, int startIndex, int endIndex){
         if(startIndex == endIndex){
             permutationResult.add(string);
         } else {
@@ -19,15 +19,14 @@ class Permutation {
         }
     }
 
-    private String swap(String originalString, int firstPosition, int secondPosition){
-        char[] charArray = originalString.toCharArray();
-        char tmp = charArray[firstPosition];
-        charArray[firstPosition] = charArray[secondPosition];
-        charArray[secondPosition] = tmp;
-        return String.valueOf(charArray);
+    @Override
+    public void calculatePermutations(String text) {
+        int textLength = text.length();
+        permute(text, 0, textLength - 1);
     }
 
-    List<String> getPermutationResult() {
+    @Override
+    public List<String> getPermutationResults() {
         return permutationResult;
     }
 }
