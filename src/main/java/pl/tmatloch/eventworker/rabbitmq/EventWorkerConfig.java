@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker.rabbitmq;
+package pl.tmatloch.eventworker.rabbitmq;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -16,39 +16,39 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import pl.tmatloch.permutationworker.scaling.ScalingComponent;
+import pl.tmatloch.eventworker.scaling.ScalingComponent;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @Configuration
-public class PermutationWorkerConfig {
+public class EventWorkerConfig {
 
     Map<String, SimpleMessageListenerContainer> containerMap = new HashMap<>();
 
     @Bean("slowQueue")
     public Queue slowQueue() {
-        return new Queue("slow.permutation.rpc.requests");
+        return new Queue("slow.event.rpc.requests");
     }
 
     @Bean("fastQueue")
     public Queue fastQueue() {
-        return new Queue("fast.permutation.rpc.requests");
+        return new Queue("fast.event.rpc.requests");
     }
 
-    @Bean("slowPermutationExchange")
-    public DirectExchange slowPermutationExchange() {
-        return new DirectExchange("slow.permutation.rpc");
+    @Bean("slowEventExchange")
+    public DirectExchange slowEventExchange() {
+        return new DirectExchange("slow.event.rpc");
     }
 
-    @Bean("fastPermutationExchange")
-    public DirectExchange fastPermutationExchange() {
-        return new DirectExchange("fast.permutation.rpc");
+    @Bean("fastEventExchange")
+    public DirectExchange fastEventExchange() {
+        return new DirectExchange("fast.event.rpc");
     }
 
     @Bean
-    public Binding slowBinding(@Qualifier("slowPermutationExchange") DirectExchange exchange,
+    public Binding slowBinding(@Qualifier("slowEventExchange") DirectExchange exchange,
                                @Qualifier("slowQueue") Queue queue) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
@@ -56,7 +56,7 @@ public class PermutationWorkerConfig {
     }
 
     @Bean
-    public Binding fastBinding(@Qualifier("fastPermutationExchange") DirectExchange exchange,
+    public Binding fastBinding(@Qualifier("fastEventExchange") DirectExchange exchange,
                                @Qualifier("fastQueue") Queue queue) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
@@ -64,8 +64,8 @@ public class PermutationWorkerConfig {
     }
 
     @Bean
-    public PermutationWorker permutationWorker() {
-        return new PermutationWorker();
+    public EventWorker permutationWorker() {
+        return new EventWorker();
     }
 
     @Bean

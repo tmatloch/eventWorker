@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker.rabbitmq;
+package pl.tmatloch.eventworker.rabbitmq;
 
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;

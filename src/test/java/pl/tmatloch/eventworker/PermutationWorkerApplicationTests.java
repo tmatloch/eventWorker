@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker;
+package pl.tmatloch.eventworker;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7,7 +7,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class PermutationWorkerApplicationTests {
+public class EventWorkerApplicationTests {
 
 	@Test
 	public void contextLoads() {

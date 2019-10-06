@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker.permutation;
+package pl.tmatloch.eventworker.permutation;
 
 import java.util.ArrayList;
 import java.util.List;

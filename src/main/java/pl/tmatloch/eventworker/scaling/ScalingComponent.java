@@ -1,11 +1,11 @@
-package pl.tmatloch.permutationworker.scaling;
+package pl.tmatloch.eventworker.scaling;
 
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pl.tmatloch.permutationworker.rabbitmq.RabbitMessageListenerContainers;
+import pl.tmatloch.eventworker.rabbitmq.RabbitMessageListenerContainers;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

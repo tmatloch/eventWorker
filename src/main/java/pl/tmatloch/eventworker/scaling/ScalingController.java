@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker.scaling;
+package pl.tmatloch.eventworker.scaling;
 
 import org.springframework.web.bind.annotation.*;
 

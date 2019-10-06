@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker.rabbitmq;
+package pl.tmatloch.eventworker.rabbitmq;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class PermutationMessage {
+public class EventMessage {
 
     String id;
     Instant onCreateTime;
@@ -23,9 +23,9 @@ public class PermutationMessage {
     String processData;
     List<String> result;
 
-    public static PermutationMessage create(String dataToProcess) {
+    public static EventMessage create(String dataToProcess) {
         String id = UUID.randomUUID().toString();
         Instant instant = Instant.now();
-        return new PermutationMessage(id, instant, null, null, dataToProcess, null);
+        return new EventMessage(id, instant, null, null, dataToProcess, null);
     }
 }

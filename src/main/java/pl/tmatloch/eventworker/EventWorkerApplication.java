@@ -1,4 +1,4 @@
-package pl.tmatloch.permutationworker;
+package pl.tmatloch.eventworker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,10 +6,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-public class PermutationWorkerApplication {
+public class EventWorkerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PermutationWorkerApplication.class, args);
+		SpringApplication.run(EventWorkerApplication.class, args);
 	}
 
 }
