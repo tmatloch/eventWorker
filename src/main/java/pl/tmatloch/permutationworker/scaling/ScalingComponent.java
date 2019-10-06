@@ -1,14 +1,12 @@
 package pl.tmatloch.permutationworker.scaling;
 
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pl.tmatloch.permutationworker.rabbitmq.RabbitListenerFactoriesContainer;
+import pl.tmatloch.permutationworker.rabbitmq.RabbitMessageListenerContainers;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,23 +16,22 @@ import java.util.stream.Collectors;
 @Component
 public class ScalingComponent {
 
-    private final Map<String, SimpleRabbitListenerContainerFactory> factoryMap;
+    private final Map<String, SimpleMessageListenerContainer> contaierMap;
 
     private final Map<String, Double> currentScalePercentage = new ConcurrentHashMap<>();
 
     private final Integer maxConcurrentThreads;
 
     @Autowired
-    public ScalingComponent(RabbitListenerFactoriesContainer factoryContainer, @Value("${rabbitmq.scale.maxConcurrentThreads:10}") Integer maxConcurrentThreads) {
-        this.factoryMap = factoryContainer.getFactoryMap();
+    public ScalingComponent(RabbitMessageListenerContainers factoryContainer, @Value("${rabbitmq.scale.maxConcurrentThreads:10}") Integer maxConcurrentThreads) {
+        this.contaierMap = factoryContainer.getFactoryMap();
         this.maxConcurrentThreads = maxConcurrentThreads;
-        init();
     }
 
-    private void init() {
-        int size = factoryMap.size();
+    public void init() {
+        int size = contaierMap.size();
         double initPercentage = (double) 1 / size;
-        factoryMap.keySet().forEach(name -> currentScalePercentage.put(name, initPercentage));
+        contaierMap.keySet().forEach(name -> currentScalePercentage.put(name, initPercentage));
         scale(currentScalePercentage);
     }
 
@@ -57,8 +54,8 @@ public class ScalingComponent {
     private void scale(Map<String, Double> newScalePercentage) {
         Map<String, Integer> calculatedThreads = calculateConcurentThreads(newScalePercentage);
         calculatedThreads.entrySet().forEach((entry) -> {
-            SimpleRabbitListenerContainerFactory factory = factoryMap.get(entry.getKey());
-            factory.setConcurrentConsumers(entry.getValue());
+            SimpleMessageListenerContainer container = contaierMap.get(entry.getKey());
+            container.setConcurrentConsumers(entry.getValue());
         });
 
     }

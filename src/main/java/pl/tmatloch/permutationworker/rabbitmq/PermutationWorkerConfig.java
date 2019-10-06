@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.annotation.Order;
+import pl.tmatloch.permutationworker.scaling.ScalingComponent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Configuration
 public class PermutationWorkerConfig {
 
-    private Map<String, SimpleRabbitListenerContainerFactory> factoryMap = new HashMap<>();
+    Map<String, SimpleMessageListenerContainer> containerMap = new HashMap<>();
 
     @Bean("slowQueue")
     public Queue slowQueue() {
@@ -75,29 +75,45 @@ public class PermutationWorkerConfig {
     }
 
     @Bean("slowRabbitFactory")
-    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> slowRabbitListenerContainerFactory(ConnectionFactory rabbitConnectionFactory) {
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> slowRabbitListenerContainerFactory(
+            ConnectionFactory rabbitConnectionFactory, ScalingComponent scalingComponent) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory() {
+
+            @Override
+            protected SimpleMessageListenerContainer createContainerInstance(){
+                SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+                containerMap.put("slow", container);
+                scalingComponent.init();
+                return container;
+            }
+        };
         factory.setMessageConverter(jackson2JsonMessageConverter());
         factory.setConnectionFactory(rabbitConnectionFactory);
         factory.setPrefetchCount(10);
-        factoryMap.put("slow", factory);
         return factory;
     }
 
     @Bean("fastRabbitFactory")
-    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> fastRabbitListenerContainerFactory(ConnectionFactory rabbitConnectionFactory) {
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> fastRabbitListenerContainerFactory(
+            ConnectionFactory rabbitConnectionFactory, ScalingComponent scalingComponent) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory() {
+            @Override
+            protected SimpleMessageListenerContainer createContainerInstance(){
+                SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+                containerMap.put("fast", container);
+                scalingComponent.init();
+                return container;
+            }
+        };
         factory.setMessageConverter(jackson2JsonMessageConverter());
         factory.setConnectionFactory(rabbitConnectionFactory);
         factory.setPrefetchCount(10);
-        factoryMap.put("fast", factory);
         return factory;
     }
 
     @Bean
-    @DependsOn({"fastRabbitFactory", "slowRabbitFactory"})
-    public RabbitListenerFactoriesContainer factoriesContainer() {
-        return new RabbitListenerFactoriesContainer(factoryMap);
+    public RabbitMessageListenerContainers factoriesContainer() {
+        return new RabbitMessageListenerContainers(containerMap);
     }
 
 }
