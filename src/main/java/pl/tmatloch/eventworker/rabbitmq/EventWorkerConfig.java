@@ -89,7 +89,7 @@ public class EventWorkerConfig {
         };
         factory.setMessageConverter(jackson2JsonMessageConverter());
         factory.setConnectionFactory(rabbitConnectionFactory);
-        factory.setPrefetchCount(10);
+        factory.setPrefetchCount(1);
         return factory;
     }
 
@@ -107,7 +107,7 @@ public class EventWorkerConfig {
         };
         factory.setMessageConverter(jackson2JsonMessageConverter());
         factory.setConnectionFactory(rabbitConnectionFactory);
-        factory.setPrefetchCount(10);
+        factory.setPrefetchCount(1);
         return factory;
     }
 
