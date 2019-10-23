@@ -16,11 +16,13 @@ public class EventWorker {
     @RabbitListener(queues = "fast.event.rpc.requests", containerFactory = "fastRabbitFactory")
     public EventMessage permuteFastText(EventMessage message){
         Instant beforeProcess = Instant.now();
-        log.info("worker - receive text = {}", message.getProcessData());
+        log.info("worker fast - receive text = {}", message.getProcessData());
         Permutation permutation = new PermutationIterate();
-        permutation.calculatePermutations(message.getProcessData());
+        int multiply = message.getMultiply();
+        for (int i = 0; i < multiply ; i++)
+            permutation.calculatePermutations(message.getProcessData());
         Instant afterProcess = Instant.now();
-        log.info("worker - finished events result");
+        log.info("worker fast - finished events result");
         message.setResult(permutation.getPermutationResults());
         message.setOnStartProcess(beforeProcess);
         message.setOnEndProcess(afterProcess);
@@ -30,11 +32,13 @@ public class EventWorker {
     @RabbitListener(queues = "slow.event.rpc.requests",  containerFactory = "slowRabbitFactory")
     public EventMessage permuteSlowText(EventMessage message){
         Instant beforeProcess = Instant.now();
-        log.info("worker - receive text = {}", message.getProcessData());
+        log.info("worker slow - receive text = {}", message.getProcessData());
         Permutation permutation = new PermutationIterate();
-        permutation.calculatePermutations(message.getProcessData());
+        int multiply = message.getMultiply();
+        for (int i = 0; i < multiply ; i++)
+            permutation.calculatePermutations(message.getProcessData());
         Instant afterProcess = Instant.now();
-        log.info("worker - finished events result");
+        log.info("worker slow - finished events result");
         message.setResult(permutation.getPermutationResults());
         message.setOnStartProcess(beforeProcess);
         message.setOnEndProcess(afterProcess);
