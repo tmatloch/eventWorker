@@ -21,21 +21,20 @@ public class ScalingComponent {
     private final Map<String, SimpleMessageListenerContainer> containerMap;
 
     private final Map<String, Double> currentScalePercentage = new ConcurrentHashMap<>();
-    private final Map<String, AtomicInteger> currentThreadCount = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicInteger> currentThreadCount = new ConcurrentHashMap<>();
 
 
     private final Map<String, Gauge> gaugeMap = new HashMap<>();
 
     private final Integer maxConcurrentThreads;
-
+    private final MeterRegistry meterRegistry;
 
 
     @Autowired
     public ScalingComponent(RabbitMessageListenerContainers factoryContainer, MeterRegistry meterRegistry, @Value("${rabbitmq.scale.maxConcurrentThreads:10}") Integer maxConcurrentThreads) {
         this.containerMap = factoryContainer.getFactoryMap();
         this.maxConcurrentThreads = maxConcurrentThreads;
-        containerMap.keySet().forEach(key -> currentThreadCount.put(key, new AtomicInteger(0)));
-        factoryContainer.getFactoryMap().keySet().forEach(key -> gaugeMap.put(key, createGauge(key, currentThreadCount.get(key), meterRegistry)));
+        this.meterRegistry = meterRegistry;
     }
 
     private Gauge createGauge(String key, AtomicInteger keyThreadCount, MeterRegistry meterRegistry) {
@@ -70,7 +69,11 @@ public class ScalingComponent {
         calculatedThreads.forEach((key, value) -> {
             SimpleMessageListenerContainer container = containerMap.get(key);
             container.setConcurrentConsumers(value);
-            currentThreadCount.get(key).getAndSet(value);
+            currentThreadCount.computeIfAbsent(key, (mapKey) -> {
+                AtomicInteger threadCount = new AtomicInteger(0);
+                gaugeMap.put(key, createGauge(key, threadCount,meterRegistry));
+                return threadCount;
+            }).getAndSet(value);
         });
 
     }
