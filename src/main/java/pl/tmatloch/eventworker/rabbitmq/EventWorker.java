@@ -19,8 +19,10 @@ public class EventWorker {
         log.info("worker fast - receive text = {}", message.getProcessData());
         Permutation permutation = new PermutationIterate();
         int multiply = message.getMultiply();
-        for (int i = 0; i < multiply ; i++)
+        for (int i = 1; i <= multiply; i++) {
+            log.info("calculating {} of {}", i, multiply);
             permutation.calculatePermutations(message.getProcessData());
+        }
         Instant afterProcess = Instant.now();
         log.info("worker fast - finished events result");
         message.setResult(permutation.getPermutationResults());
@@ -35,8 +37,10 @@ public class EventWorker {
         log.info("worker slow - receive text = {}", message.getProcessData());
         Permutation permutation = new PermutationIterate();
         int multiply = message.getMultiply();
-        for (int i = 0; i < multiply ; i++)
+        for (int i = 1; i <= multiply; i++) {
+            log.info("calculating {} of {}", i, multiply);
             permutation.calculatePermutations(message.getProcessData());
+        }
         Instant afterProcess = Instant.now();
         log.info("worker slow - finished events result");
         message.setResult(permutation.getPermutationResults());

@@ -9,6 +9,7 @@ public class PermutationIterate implements Permutation{
 
     @Override
     public void calculatePermutations(String text) {
+        permutationResult.clear();
         permutationResult.add(String.valueOf(text.charAt(0)));
 
         for (int i = 1; i < text.length(); i++)

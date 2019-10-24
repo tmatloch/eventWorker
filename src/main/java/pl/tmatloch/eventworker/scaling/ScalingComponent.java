@@ -1,12 +1,14 @@
 package pl.tmatloch.eventworker.scaling;
 
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import pl.tmatloch.eventworker.rabbitmq.RabbitMessageListenerContainers;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,22 +18,34 @@ import java.util.stream.Collectors;
 @Component
 public class ScalingComponent {
 
-    private final Map<String, SimpleMessageListenerContainer> contaierMap;
+    private final Map<String, SimpleMessageListenerContainer> containerMap;
 
     private final Map<String, Double> currentScalePercentage = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> currentThreadCount = new ConcurrentHashMap<>();
+
+
+    private final Map<String, Gauge> gaugeMap = new HashMap<>();
 
     private final Integer maxConcurrentThreads;
 
+
+
     @Autowired
-    public ScalingComponent(RabbitMessageListenerContainers factoryContainer, @Value("${rabbitmq.scale.maxConcurrentThreads:10}") Integer maxConcurrentThreads) {
-        this.contaierMap = factoryContainer.getFactoryMap();
+    public ScalingComponent(RabbitMessageListenerContainers factoryContainer, MeterRegistry meterRegistry, @Value("${rabbitmq.scale.maxConcurrentThreads:10}") Integer maxConcurrentThreads) {
+        this.containerMap = factoryContainer.getFactoryMap();
         this.maxConcurrentThreads = maxConcurrentThreads;
+        containerMap.keySet().forEach(key -> currentThreadCount.put(key, new AtomicInteger(0)));
+        factoryContainer.getFactoryMap().keySet().forEach(key -> gaugeMap.put(key, createGauge(key, currentThreadCount.get(key), meterRegistry)));
+    }
+
+    private Gauge createGauge(String key, AtomicInteger keyThreadCount, MeterRegistry meterRegistry) {
+        return Gauge.builder(key + "_event_threads", keyThreadCount::get).register(meterRegistry);
     }
 
     public void init() {
-        int size = contaierMap.size();
+        int size = containerMap.size();
         double initPercentage = (double) 1 / size;
-        contaierMap.keySet().forEach(name -> currentScalePercentage.put(name, initPercentage));
+        containerMap.keySet().forEach(name -> currentScalePercentage.put(name, initPercentage));
         scale(currentScalePercentage);
     }
 
@@ -53,16 +67,17 @@ public class ScalingComponent {
 
     private void scale(Map<String, Double> newScalePercentage) {
         Map<String, Integer> calculatedThreads = calculateConcurentThreads(newScalePercentage);
-        calculatedThreads.entrySet().forEach((entry) -> {
-            SimpleMessageListenerContainer container = contaierMap.get(entry.getKey());
-            container.setConcurrentConsumers(entry.getValue());
+        calculatedThreads.forEach((key, value) -> {
+            SimpleMessageListenerContainer container = containerMap.get(key);
+            container.setConcurrentConsumers(value);
+            currentThreadCount.get(key).getAndSet(value);
         });
 
     }
 
     private Map<String, Integer> calculateConcurentThreads(Map<String, Double> newScalePercentage) {
 
-        Map<String, Double> notRoundedThreadCount = newScalePercentage.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() * maxConcurrentThreads));
+        Map<String, Double> notRoundedThreadCount = newScalePercentage.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() * maxConcurrentThreads));
         final int missingThreadCount = maxConcurrentThreads - notRoundedThreadCount.values().stream().mapToInt(Double::intValue).sum();
         if(missingThreadCount > 0){
 
