@@ -7,7 +7,6 @@ import pl.tmatloch.eventworker.permutation.PermutationIterate;
 
 
 import java.time.Instant;
-import java.util.List;
 
 @Slf4j
 public class EventWorker {
@@ -25,7 +24,7 @@ public class EventWorker {
         }
         Instant afterProcess = Instant.now();
         log.info("worker fast - finished events result");
-        message.setResult(permutation.getPermutationResults());
+        message.setResultStatus("OK");
         message.setOnStartProcess(beforeProcess);
         message.setOnEndProcess(afterProcess);
         return message;
@@ -43,7 +42,7 @@ public class EventWorker {
         }
         Instant afterProcess = Instant.now();
         log.info("worker slow - finished events result");
-        message.setResult(permutation.getPermutationResults());
+        message.setResultStatus("OK");
         message.setOnStartProcess(beforeProcess);
         message.setOnEndProcess(afterProcess);
         return message;
