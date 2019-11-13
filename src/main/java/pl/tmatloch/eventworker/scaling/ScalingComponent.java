@@ -23,7 +23,6 @@ public class ScalingComponent {
     private final Map<String, Double> currentScalePercentage = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicInteger> currentThreadCount = new ConcurrentHashMap<>();
 
-
     private final Map<String, Gauge> gaugeMap = new HashMap<>();
 
     private final Integer maxConcurrentThreads;
@@ -56,7 +55,7 @@ public class ScalingComponent {
         if(currentScalePercentage.keySet().stream().allMatch(scaleNewWeight::containsKey)){
             long weightSum = Math.round(scaleNewWeight.values().stream().mapToDouble(Double::doubleValue).sum());
             if (weightSum != 1) {
-                //TODO recalculateWetights
+                throw new IllegalArgumentException("Sum of percentage must be equal 1");
             }
             currentScalePercentage.replaceAll((key, value) -> scaleNewWeight.get(key));
             scale(currentScalePercentage);
@@ -97,7 +96,7 @@ public class ScalingComponent {
             notRoundedThreadCount.entrySet().stream().sorted(Map.Entry.comparingByValue((aDouble, t1) -> {
                 Double fractADouble = (aDouble - aDouble.intValue());
                 Double fractT1 = (t1 - t1.intValue());
-                return Double.compare(fractADouble, fractT1);
+                return Double.compare(fractT1, fractADouble);
             })).forEachOrdered(e -> e.setValue(e.getValue() + intSupplier.getAsInt()));
         }
         return notRoundedThreadCount.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().intValue()));
